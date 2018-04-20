@@ -132,8 +132,11 @@ internal fun verifyModule(llvmModule: LLVMModuleRef, current: String = "") {
                 llvmModule, LLVMVerifierFailureAction.LLVMPrintMessageAction, errorRef.ptr) == 1) {
             if (current.isNotEmpty())
                 println("Error in $current")
-            LLVMDumpModule(llvmModule)
-            throw Error("Invalid module")
+            // TODO: generate proper name
+            val dumpName = "failed_verification_dump.ll"
+            LLVMWriteBitcodeToFile(llvmModule, dumpName)
+//            LLVMDumpModule(llvmModule)
+            throw Error("Invalid module. Look for module's dump in $dumpName")
         }
     }
 }
