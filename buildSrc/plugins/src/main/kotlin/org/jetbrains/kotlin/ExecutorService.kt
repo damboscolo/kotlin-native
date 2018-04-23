@@ -22,6 +22,7 @@ import org.gradle.api.Project
 import org.gradle.process.ExecResult
 import org.gradle.process.ExecSpec
 import org.gradle.util.ConfigureUtil
+import org.jetbrains.kotlin.konan.target.AppleConfigurables
 
 import org.jetbrains.kotlin.konan.target.KonanTarget
 import org.jetbrains.kotlin.konan.target.PlatformManager
@@ -134,14 +135,28 @@ fun runProcess(executor: (Action<in ExecSpec>) -> ExecResult?,
 private fun simulator(project: Project) : ExecutorService = object : ExecutorService {
 
     private val simctl by lazy {
-        val sdk = Xcode.current.iphonesimulatorSdk
-        val out = ByteArrayOutputStream()
-        val result = project.exec {
+        val target = KonanTarget.IOS_X64
+        val platform = (project.rootProject.findProperty("platformManager") as PlatformManager).platform(target)
+        val configs = platform.configurables as AppleConfigurables
+
+        val sdk = configs.absoluteTargetSysRoot
+        var out = ByteArrayOutputStream()
+        var result = project.exec {
             it.commandLine("/usr/bin/xcrun", "--find", "simctl", "--sdk", sdk)
             it.standardOutput = out
         }
         result.assertNormalExitValue()
-        out.toString("UTF-8").trim()
+        val l = out.toString("UTF-8").trim()
+        println("SIMCTL path: $l")
+
+        out = ByteArrayOutputStream()
+        result = project.exec {
+            it.commandLine(l, "list")
+            it.standardOutput = out
+        }
+        println(out.toString("UTF-8").trim())
+        result.assertNormalExitValue()
+        l
     }
 
     private val iosDevice = project.findProperty("iosDevice")?.toString() ?: "iPhone 8"
