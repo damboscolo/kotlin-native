@@ -42,7 +42,7 @@ internal val ValueType.llvmType: LLVMTypeRef
 
 internal val ValueType.llvmMemoryType: LLVMTypeRef
     get() = if (this == ValueType.BOOLEAN) {
-        LLVMInt8Type()!!
+        int8Type
     } else {
         llvmType
     }
